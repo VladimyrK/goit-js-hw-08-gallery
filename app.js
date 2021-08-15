@@ -45,13 +45,14 @@ const galleryItems = [
     description: 'Lighthouse Coast Sea',
   },
 ]
-
+// Объявление доступов
 const list = document.querySelector('.js-gallery')
 const modal = document.querySelector('.js-lightbox')
 const modalImg = document.querySelector('.lightbox__image')
 const modalBtnClose = document.querySelector('[data-action="close-lightbox"]')
 const modalOverlay = document.querySelector('.lightbox__overlay')
 
+// Создание галереи
 galleryItems.forEach(({ preview, original, description }) => {
   const item = document.createElement('li')
   const itemLink = document.createElement('a')
@@ -66,29 +67,70 @@ galleryItems.forEach(({ preview, original, description }) => {
   itemImg.classList.add('gallery__image')
 })
 
+// Слушатели событий
 list.addEventListener('click', e => {
-  modal.classList.add('is-open')
-  const data = getImgData(e)
-  modalImg.setAttribute('src', data.original)
-  modalImg.setAttribute('alt', data.description)
+  const scroll = openModal(e)
+  window.addEventListener('keydown', scroll)
+
+  modalBtnClose.addEventListener('click', closeModal)
+
+  modalOverlay.addEventListener('click', closeModal)
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeModal()
+      console.log('not closed')
+    }
+  })
 })
 
-modalBtnClose.addEventListener('click', closeModal)
-
-modalOverlay.addEventListener('click', closeModal)
-
-window.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeModal()
-  }
-})
-
+// Функции
 function getImgData(img) {
   return galleryItems.find(({ preview }) => preview === img.target.src)
+}
+
+function getImgDataId(imgData) {
+  return galleryItems.indexOf(imgData)
 }
 
 function closeModal() {
   modal.classList.remove('is-open')
   modalImg.setAttribute('src', '')
   modalImg.setAttribute('alt', '')
+
+  window.removeEventListener('keydown', scroll)
+  modalBtnClose.removeEventListener('click', closeModal)
+  modalOverlay.removeEventListener('click', closeModal)
+  window.removeEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeModal()
+      console.log('not closed')
+    }
+  })
+}
+
+function openModal(e) {
+  modal.classList.add('is-open')
+  const imgData = getImgData(e)
+  modalImg.setAttribute('src', imgData.original)
+  modalImg.setAttribute('alt', imgData.description)
+  let imgDataId = getImgDataId(imgData)
+  return function scroll(e) {
+    console.log(galleryItems[imgDataId])
+    if (e.key === 'ArrowRight') {
+      imgDataId += 1
+      if (imgDataId >= galleryItems.length) {
+        imgDataId = 0
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      imgDataId -= 1
+      if (imgDataId < 0) {
+        imgDataId = galleryItems.length - 1
+      }
+    }
+    console.log(imgDataId)
+    modalImg.setAttribute('src', galleryItems[imgDataId].original)
+    modalImg.setAttribute('alt', galleryItems[imgDataId].description)
+  }
 }
